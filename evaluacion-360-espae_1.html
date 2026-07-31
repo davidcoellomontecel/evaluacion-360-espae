@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evaluación 360 · ESPAE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --plum-900:#2f2c35;
+    --plum-700:#572975;
+    --plum-500:#815c97;
+    --plum-300:#ab90b9;
+    --lilac-100:#d5c6dc;
+    --grey-200:#d0ccd5;
+    --white:#ffffff;
+    --radius:14px;
+    --shadow: 0 12px 32px -18px rgba(47,44,53,0.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Inter',sans-serif;
+    color:var(--plum-900);
+    background:
+      radial-gradient(circle at 8% 0%, var(--lilac-100) 0%, rgba(213,198,220,0) 42%),
+      radial-gradient(circle at 100% 12%, var(--grey-200) 0%, rgba(208,204,213,0) 38%),
+      var(--white);
+    min-height:100vh;
+    line-height:1.5;
+  }
+  .app{max-width:760px;margin:0 auto;padding:32px 20px 80px;}
+  .brand{display:flex;align-items:center;gap:12px;margin-bottom:38px;cursor:pointer;user-select:none;}
+  .brand .mark{
+    width:38px;height:38px;border-radius:11px;
+    background:linear-gradient(155deg,var(--plum-700),var(--plum-500));
+    display:flex;align-items:center;justify-content:center;
+    color:var(--white);font-family:'Fraunces',serif;font-weight:600;font-size:18px;
+    flex-shrink:0;
+  }
+  .brand .txt{display:flex;flex-direction:column;line-height:1.2;}
+  .brand .eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--plum-500);font-weight:600;}
+  .brand .title{font-family:'Fraunces',serif;font-size:17px;font-weight:500;color:var(--plum-900);}
+
+  .view{display:none;animation:rise .45s ease both;}
+  .view.active{display:block;}
+  @keyframes rise{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+  h1.hero{font-family:'Fraunces',serif;font-weight:500;font-size:clamp(30px,5vw,42px);letter-spacing:-.01em;margin:0 0 10px;color:var(--plum-900);}
+  p.lede{color:var(--plum-700);font-size:16px;max-width:52ch;margin:0 0 36px;}
+
+  .choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media (max-width:560px){.choice-grid{grid-template-columns:1fr;}}
+  .choice-card{
+    text-align:left;border:1px solid var(--grey-200);background:var(--white);
+    border-radius:var(--radius);padding:26px 22px;cursor:pointer;
+    transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    font-family:inherit;
+  }
+  .choice-card:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:var(--plum-300);}
+  .choice-card:focus-visible{outline:2px solid var(--plum-700);outline-offset:3px;}
+  .choice-card .num{font-family:'Fraunces',serif;font-size:13px;color:var(--plum-300);letter-spacing:.08em;}
+  .choice-card h3{font-family:'Fraunces',serif;font-weight:500;font-size:20px;margin:10px 0 8px;}
+  .choice-card p{margin:0;font-size:13.5px;color:#6d6577;}
+
+  .admin-link{margin-top:52px;text-align:center;}
+  .admin-link button{background:none;border:none;color:var(--plum-300);font-size:12px;cursor:pointer;letter-spacing:.03em;}
+  .admin-link button:hover{color:var(--plum-700);}
+
+  .card{background:var(--white);border:1px solid var(--grey-200);border-radius:var(--radius);padding:28px 26px;box-shadow:var(--shadow);}
+  .back-row{display:flex;align-items:center;gap:8px;margin-bottom:22px;}
+  .back-btn{background:none;border:none;color:var(--plum-500);font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;padding:4px 0;}
+  .back-btn:hover{color:var(--plum-700);}
+
+  label{display:block;font-size:13px;font-weight:600;color:var(--plum-700);margin:0 0 6px;}
+  .field{margin-bottom:18px;}
+  select, input[type=text], input[type=password], input[type=tel], textarea{
+    width:100%;border:1.5px solid var(--grey-200);border-radius:10px;padding:12px 14px;
+    font-family:inherit;font-size:15px;color:var(--plum-900);background:var(--white);
+    transition:border-color .15s ease;
+  }
+  select:focus, input:focus, textarea:focus{outline:none;border-color:var(--plum-700);}
+  textarea{resize:vertical;min-height:96px;}
+  .hint{font-size:12px;color:#8a8391;margin-top:5px;}
+  .error-msg{background:#fbeeee;border:1px solid #e3b8b8;color:#8f3a3a;font-size:13.5px;padding:10px 13px;border-radius:9px;margin-top:14px;}
+
+  .btn{
+    appearance:none;border:none;border-radius:10px;padding:13px 24px;font-size:15px;font-weight:600;
+    font-family:inherit;cursor:pointer;transition:filter .15s ease, transform .1s ease;
+  }
+  .btn:active{transform:scale(.98);}
+  .btn-primary{background:var(--plum-700);color:var(--white);}
+  .btn-primary:hover{filter:brightness(1.08);}
+  .btn-secondary{background:var(--lilac-100);color:var(--plum-700);}
+  .btn-secondary:hover{filter:brightness(.97);}
+  .btn-block{width:100%;}
+  .btn[disabled]{opacity:.5;cursor:not-allowed;}
+
+  .section-block{margin-bottom:34px;}
+  .section-block .eyebrow{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--plum-500);font-weight:700;margin-bottom:4px;}
+  .section-block h2{font-family:'Fraunces',serif;font-weight:500;font-size:23px;margin:0 0 6px;}
+  .section-block .desc{font-size:14px;color:#6d6577;margin:0 0 20px;}
+
+  .likert-item{padding:16px 0;border-top:1px solid var(--grey-200);}
+  .likert-item:first-of-type{border-top:none;}
+  .likert-q{font-size:14.5px;color:var(--plum-900);margin-bottom:12px;}
+  .likert-scale{display:flex;gap:8px;flex-wrap:wrap;}
+  .likert-opt{flex:1;min-width:72px;}
+  .likert-opt input{position:absolute;opacity:0;width:0;height:0;}
+  .likert-opt label{
+    display:block;text-align:center;border:1.5px solid var(--grey-200);border-radius:9px;
+    padding:9px 4px;font-size:11.5px;font-weight:500;color:#6d6577;cursor:pointer;margin:0;
+    transition:all .15s ease;
+  }
+  .likert-opt input:checked + label{background:var(--plum-700);border-color:var(--plum-700);color:var(--white);}
+  .likert-opt label:hover{border-color:var(--plum-500);}
+
+  .confirm-wrap{text-align:center;padding:60px 20px;}
+  .confirm-icon{
+    width:64px;height:64px;border-radius:50%;background:var(--plum-700);color:var(--white);
+    display:flex;align-items:center;justify-content:center;margin:0 auto 22px;font-size:28px;
+  }
+  .confirm-wrap h2{font-family:'Fraunces',serif;font-weight:500;font-size:26px;margin:0 0 10px;}
+  .confirm-wrap p{color:#6d6577;font-size:15px;max-width:40ch;margin:0 auto 28px;}
+
+  table.admin-table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:14px;}
+  table.admin-table th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--plum-500);padding:8px 10px;border-bottom:1.5px solid var(--grey-200);}
+  table.admin-table td{padding:9px 10px;border-bottom:1px solid var(--grey-200);}
+  table.admin-table tr:last-child td{border-bottom:none;}
+  .pin-tag{font-family:monospace;background:var(--lilac-100);color:var(--plum-700);padding:2px 8px;border-radius:6px;font-size:12.5px;}
+  .row-btn{background:none;border:none;color:#b05252;cursor:pointer;font-size:12px;}
+  .stat-badges{display:flex;gap:6px;flex-wrap:wrap;}
+  .badge{font-size:11px;padding:2px 8px;border-radius:20px;background:var(--grey-200);color:var(--plum-900);}
+  .badge.on{background:var(--plum-700);color:var(--white);}
+
+  .admin-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px;}
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+    background:var(--plum-900);color:var(--white);padding:11px 20px;border-radius:10px;
+    font-size:13.5px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .25s ease, transform .25s ease;z-index:50;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-4px);}
+
+  .inline-form{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;}
+  .inline-form input{flex:1;min-width:160px;}
+
+  .subtle-divider{height:1px;background:var(--grey-200);margin:26px 0;}
+  .muted{color:#8a8391;font-size:13px;}
+  .status-banner{background:#fbeeee;border:1px solid #e3b8b8;color:#8f3a3a;font-size:13px;padding:12px 16px;border-radius:10px;margin-bottom:22px;white-space:pre-wrap;word-break:break-word;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="brand" onclick="goHome()">
+    <div class="mark">E</div>
+    <div class="txt">
+      <span class="eyebrow">Diplomado Mujeres Directivas · ESPAE ESPOL</span>
+      <span class="title">Evaluación 360</span>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div class="view active" id="view-home">
+    <div id="home-status"></div>
+    <h1 class="hero">Un espejo completo de tu liderazgo.</h1>
+    <p class="lede">Esta evaluación combina tu propia mirada con la de las personas de tu entorno personal y profesional, en las competencias de liderazgo, toma de decisiones y pensamiento crítico.</p>
+    <div class="choice-grid">
+      <button class="choice-card" onclick="startSelf()">
+        <div class="num">01</div>
+        <h3>Autoevaluación</h3>
+        <p>Eres participante del diplomado y vas a evaluarte a ti misma.</p>
+      </button>
+      <button class="choice-card" onclick="startPeer()">
+        <div class="num">02</div>
+        <h3>Evaluación de pares</h3>
+        <p>Vas a evaluar a una participante desde tu entorno personal o profesional.</p>
+      </button>
+    </div>
+    <div class="admin-link"><button onclick="goAdminLogin()">Acceso administrador</button></div>
+  </div>
+
+  <!-- SELF AUTH -->
+  <div class="view" id="view-self-auth">
+    <div class="back-row"><button class="back-btn" onclick="goHome()">← Volver</button></div>
+    <div class="card">
+      <div class="section-block" style="margin-bottom:22px;">
+        <div class="eyebrow">Autoevaluación</div>
+        <h2>Confirma tu identidad</h2>
+        <p class="desc">Selecciona tu nombre e ingresa tu PIN de validación para continuar.</p>
+      </div>
+      <div class="field">
+        <label for="self-name">Nombre de la participante</label>
+        <select id="self-name"><option value="">Selecciona tu nombre…</option></select>
+      </div>
+      <div class="field">
+        <label for="self-pin">PIN de validación</label>
+        <input type="tel" id="self-pin" maxlength="6" placeholder="••••">
+      </div>
+      <button class="btn btn-primary btn-block" onclick="validateSelf()">Continuar</button>
+      <div id="self-auth-error"></div>
+    </div>
+  </div>
+
+  <!-- SELF FORM -->
+  <div class="view" id="view-self-form">
+    <div class="back-row"><button class="back-btn" onclick="goHome()">← Salir</button></div>
+    <div class="card">
+      <p class="muted" style="margin-top:0;">Autoevaluación de <strong id="self-form-name"></strong></p>
+      <form id="self-form-el" onsubmit="submitSelf(event)"></form>
+    </div>
+  </div>
+
+  <!-- SELF DONE -->
+  <div class="view" id="view-self-done">
+    <div class="card confirm-wrap">
+      <div class="confirm-icon">✓</div>
+      <h2>¡Autoevaluación registrada!</h2>
+      <p>Gracias por completar tu autoevaluación. Tus respuestas ya forman parte de tu informe de Evaluación 360.</p>
+      <button class="btn btn-secondary" onclick="goHome()">Volver al inicio</button>
+    </div>
+  </div>
+
+  <!-- PEER AUTH -->
+  <div class="view" id="view-peer-auth">
+    <div class="back-row"><button class="back-btn" onclick="goHome()">← Volver</button></div>
+    <div class="card">
+      <div class="section-block" style="margin-bottom:22px;">
+        <div class="eyebrow">Evaluación de pares</div>
+        <h2>¿A quién vas a evaluar?</h2>
+        <p class="desc">Selecciona a la participante y confirma con su PIN de validación.</p>
+      </div>
+      <div class="field">
+        <label for="peer-name">Nombre de la participante</label>
+        <select id="peer-name"><option value="">Selecciona el nombre…</option></select>
+      </div>
+      <div class="field">
+        <label for="peer-pin">PIN de validación de la participante</label>
+        <input type="tel" id="peer-pin" maxlength="6" placeholder="••••">
+      </div>
+      <div class="subtle-divider"></div>
+      <div class="field">
+        <label for="peer-evaluator-name">Tu nombre</label>
+        <input type="text" id="peer-evaluator-name" placeholder="Ej. Ana Torres">
+      </div>
+      <div class="field">
+        <label for="peer-rel-type">Tu entorno con la participante</label>
+        <select id="peer-rel-type" onchange="updateRelDetail()">
+          <option value="">Selecciona…</option>
+          <option value="Personal">Entorno personal</option>
+          <option value="Profesional">Entorno profesional</option>
+        </select>
+      </div>
+      <div class="field" id="peer-rel-detail-wrap" style="display:none;">
+        <label for="peer-rel-detail">Relación específica</label>
+        <select id="peer-rel-detail"></select>
+      </div>
+      <button class="btn btn-primary btn-block" onclick="validatePeer()">Continuar</button>
+      <div id="peer-auth-error"></div>
+    </div>
+  </div>
+
+  <!-- PEER FORM -->
+  <div class="view" id="view-peer-form">
+    <div class="back-row"><button class="back-btn" onclick="goHome()">← Salir</button></div>
+    <div class="card">
+      <p class="muted" style="margin-top:0;">Evaluación de pares para <strong id="peer-form-name"></strong></p>
+      <form id="peer-form-el" onsubmit="submitPeer(event)"></form>
+    </div>
+  </div>
+
+  <!-- PEER DONE -->
+  <div class="view" id="view-peer-done">
+    <div class="card confirm-wrap">
+      <div class="confirm-icon">✓</div>
+      <h2>¡Evaluación enviada!</h2>
+      <p>Gracias por tu tiempo. Tu evaluación fue registrada y contribuirá al informe de Evaluación 360 de la participante.</p>
+      <button class="btn btn-secondary" onclick="goHome()">Volver al inicio</button>
+    </div>
+  </div>
+
+  <!-- ADMIN LOGIN -->
+  <div class="view" id="view-admin-login">
+    <div class="back-row"><button class="back-btn" onclick="goHome()">← Volver</button></div>
+    <div class="card">
+      <div class="section-block" style="margin-bottom:22px;">
+        <div class="eyebrow">Administrador</div>
+        <h2>Panel de administración</h2>
+        <p class="desc">Ingresa la clave de administrador del programa.</p>
+      </div>
+      <div class="field">
+        <label for="admin-pass">Clave</label>
+        <input type="password" id="admin-pass">
+      </div>
+      <button class="btn btn-primary btn-block" onclick="checkAdminPass()">Entrar</button>
+      <div id="admin-login-error"></div>
+    </div>
+  </div>
+
+  <!-- ADMIN PANEL -->
+  <div class="view" id="view-admin">
+    <div class="back-row"><button class="back-btn" onclick="goHome()">← Salir</button></div>
+
+    <div class="card" style="margin-bottom:20px;">
+      <div class="section-block" style="margin-bottom:14px;">
+        <div class="eyebrow">Administrador</div>
+        <h2>Participantes</h2>
+        <p class="desc">Agrega participantes y comparte el PIN generado con cada una y con quienes la van a evaluar.</p>
+      </div>
+      <div class="inline-form">
+        <input type="text" id="new-participant-name" placeholder="Nombre completo de la participante">
+        <button class="btn btn-primary" onclick="addParticipant()">Agregar</button>
+      </div>
+      <table class="admin-table" id="admin-participant-table">
+        <thead><tr><th>Nombre</th><th>PIN</th><th>Autoeval.</th><th>Pares</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="section-block" style="margin-bottom:10px;">
+        <div class="eyebrow">Datos y reportes</div>
+        <h2>Exportar resultados</h2>
+        <p class="desc">Descarga todos los datos crudos en Excel, o genera el informe PDF consolidado de una participante.</p>
+      </div>
+      <div class="admin-actions">
+        <button class="btn btn-secondary" onclick="exportExcel()">⇩ Descargar Excel (todos los datos)</button>
+      </div>
+      <div class="subtle-divider"></div>
+      <div class="field">
+        <label for="report-participant">Generar informe PDF para</label>
+        <select id="report-participant"></select>
+      </div>
+      <button class="btn btn-primary" onclick="generatePdf()">⇩ Descargar informe PDF</button>
+      <a id="pdf-fallback-link" class="btn btn-secondary" style="display:none;margin-left:10px;" target="_blank" rel="noopener">Abrir informe PDF</a>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------------- Data model helpers ---------------- */
+const ADMIN_PASSWORD = "Coello1994";
+
+const COMPETENCIES = [
+  { key:"liderazgo", label:"Liderazgo" },
+  { key:"decision", label:"Toma de decisiones" },
+  { key:"critico", label:"Pensamiento crítico" }
+];
+
+const ITEMS_SELF = {
+  liderazgo:[
+    "Inspiro y motivo a otros a alcanzar objetivos comunes.",
+    "Comunico una visión clara del futuro que quiero construir.",
+    "Delego responsabilidades de manera efectiva.",
+    "Genero confianza en las personas con las que trabajo."
+  ],
+  decision:[
+    "Analizo distintas alternativas antes de tomar una decisión.",
+    "Tomo decisiones oportunas incluso bajo presión.",
+    "Asumo la responsabilidad de las decisiones que tomo.",
+    "Considero el impacto de mis decisiones en los demás."
+  ],
+  critico:[
+    "Cuestiono supuestos y busco evidencia antes de concluir.",
+    "Identifico patrones y relaciones entre problemas complejos.",
+    "Evalúo objetivamente distintos puntos de vista.",
+    "Propongo soluciones innovadoras a los problemas."
+  ]
+};
+
+const ITEMS_PEER = {
+  liderazgo:[
+    "Inspira y motiva a otros a alcanzar objetivos comunes.",
+    "Comunica una visión clara del futuro que quiere construir.",
+    "Delega responsabilidades de manera efectiva.",
+    "Genera confianza en las personas con las que trabaja."
+  ],
+  decision:[
+    "Analiza distintas alternativas antes de tomar una decisión.",
+    "Toma decisiones oportunas incluso bajo presión.",
+    "Asume la responsabilidad de las decisiones que toma.",
+    "Considera el impacto de sus decisiones en los demás."
+  ],
+  critico:[
+    "Cuestiona supuestos y busca evidencia antes de concluir.",
+    "Identifica patrones y relaciones entre problemas complejos.",
+    "Evalúa objetivamente distintos puntos de vista.",
+    "Propone soluciones innovadoras a los problemas."
+  ]
+};
+
+const LIKERT = [
+  {v:1,l:"Totalmente en desacuerdo"},
+  {v:2,l:"En desacuerdo"},
+  {v:3,l:"Neutral"},
+  {v:4,l:"De acuerdo"},
+  {v:5,l:"Totalmente de acuerdo"}
+];
+
+const REL_DETAILS = {
+  Personal:["Familiar","Amigo/a"],
+  Profesional:["Jefe/a","Colega","Subordinado/a"]
+};
+
+let participants = [];
+let responses = [];
+let selectedSelfParticipant = null;
+let selectedPeerParticipant = null;
+
+// Pega aquí la URL de tu Web App de Google Apps Script (termina en /exec)
+// Ver instrucciones-backend-google-sheets.md para cómo obtenerla.
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzSpyAcu0spqLnY696hqjRfAA5S4HGmW-PSmuEk-ymEVWwJlQryiVlwIHZe6fm9Jw6chw/exec";
+
+const SEED_PARTICIPANTS = [
+  { name:"LESLY RODRIGUEZ", pin:"1234" },
+  { name:"ANA MANTILLA", pin:"2345" },
+  { name:"FERNANDA SUAREZ", pin:"3456" }
+];
+
+async function apiGet(){
+  const res = await fetch(APPS_SCRIPT_URL, { method:'GET' });
+  const text = await res.text();
+  if(!res.ok){ throw new Error(`HTTP ${res.status} al leer datos. Respuesta: ${text.slice(0,200)}`); }
+  try{ return JSON.parse(text); }
+  catch(e){ throw new Error(`La respuesta no es JSON válido (¿requiere inicio de sesión o falta autorizar el script?). Respuesta: ${text.slice(0,200)}`); }
+}
+async function apiPost(payload){
+  const res = await fetch(APPS_SCRIPT_URL, {
+    method:'POST',
+    headers: { 'Content-Type':'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload)
+  });
+  const text = await res.text();
+  if(!res.ok){ throw new Error(`HTTP ${res.status} al guardar. Respuesta: ${text.slice(0,200)}`); }
+  try{ return JSON.parse(text); }
+  catch(e){ throw new Error(`La respuesta no es JSON válido al guardar. Respuesta: ${text.slice(0,200)}`); }
+}
+
+function setHomeStatus(message){
+  const el = document.getElementById('home-status');
+  if(!el) return;
+  el.innerHTML = message ? `<div class="status-banner">${escapeHtml(message)}</div>` : '';
+}
+
+async function loadData(){
+  if(APPS_SCRIPT_URL.indexOf('PEGA_AQUI') !== -1){
+    setHomeStatus('Falta configurar la conexión con Google Sheets (APPS_SCRIPT_URL).');
+    return;
+  }
+  let data;
+  try{
+    data = await apiGet();
+    setHomeStatus('');
+  }catch(e){
+    console.error('Error en apiGet:', e);
+    setHomeStatus('No se pudo leer la lista de participantes.\n' + e.message);
+    return;
+  }
+  participants = data.participants || [];
+  responses = data.responses || [];
+
+  const missing = SEED_PARTICIPANTS.filter(seed => !participants.some(p=>p.name===seed.name));
+  for(const seed of missing){
+    const p = { id: uid('p'), name: seed.name, pin: seed.pin };
+    try{
+      await apiPost({ action:'addParticipant', participant:p });
+      participants.push(p);
+    }catch(e){
+      console.error('Error al sembrar participante:', e);
+      setHomeStatus('No se pudieron crear las participantes iniciales.\n' + e.message);
+    }
+  }
+}
+
+function uid(prefix){ return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function genPin(){
+  let pin;
+  do{ pin = String(Math.floor(1000 + Math.random()*9000)); }
+  while(participants.some(p=>p.pin===pin));
+  return pin;
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2400);
+}
+
+/* ---------------- View navigation ---------------- */
+function showView(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function goHome(){ showView('view-home'); }
+
+function populateNameSelect(selectEl){
+  selectEl.innerHTML = '<option value="">Selecciona…</option>' +
+    participants.map(p=>`<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+}
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+async function startSelf(){
+  await loadData();
+  populateNameSelect(document.getElementById('self-name'));
+  document.getElementById('self-pin').value='';
+  document.getElementById('self-auth-error').innerHTML='';
+  showView('view-self-auth');
+}
+async function startPeer(){
+  await loadData();
+  populateNameSelect(document.getElementById('peer-name'));
+  document.getElementById('peer-pin').value='';
+  document.getElementById('peer-evaluator-name').value='';
+  document.getElementById('peer-rel-type').value='';
+  document.getElementById('peer-rel-detail-wrap').style.display='none';
+  document.getElementById('peer-auth-error').innerHTML='';
+  showView('view-peer-auth');
+}
+
+function updateRelDetail(){
+  const type = document.getElementById('peer-rel-type').value;
+  const wrap = document.getElementById('peer-rel-detail-wrap');
+  const sel = document.getElementById('peer-rel-detail');
+  if(!type){ wrap.style.display='none'; return; }
+  sel.innerHTML = REL_DETAILS[type].map(d=>`<option value="${d}">${d}</option>`).join('');
+  wrap.style.display='block';
+}
+
+/* ---------------- Self flow ---------------- */
+async function validateSelf(){
+  const sel = document.getElementById('self-name');
+  const pin = document.getElementById('self-pin').value.trim();
+  const errBox = document.getElementById('self-auth-error');
+  errBox.innerHTML='';
+  const p = participants.find(x=>x.id===sel.value);
+  if(!p){ errBox.innerHTML='<div class="error-msg">Selecciona tu nombre de la lista.</div>'; return; }
+  if(p.pin !== pin){ errBox.innerHTML='<div class="error-msg">El PIN ingresado no coincide. Verifica e intenta de nuevo.</div>'; return; }
+  const already = responses.find(r=>r.participantId===p.id && r.type==='self');
+  if(already){ errBox.innerHTML='<div class="error-msg">Ya se registró una autoevaluación para esta participante.</div>'; return; }
+  selectedSelfParticipant = p;
+  document.getElementById('self-form-name').textContent = p.name;
+  renderForm('self-form-el', ITEMS_SELF, 'primera');
+  showView('view-self-form');
+}
+
+function renderForm(containerId, itemsSet, voice){
+  const container = document.getElementById(containerId);
+  let html = '';
+  COMPETENCIES.forEach(comp=>{
+    html += `<div class="section-block">
+      <div class="eyebrow">Sección 1 · ${comp.label}</div>
+      <h2>${comp.label}</h2>
+      <p class="desc">Valora qué tan de acuerdo estás con cada afirmación.</p>`;
+    itemsSet[comp.key].forEach((text,i)=>{
+      const name = `${comp.key}_${i}`;
+      html += `<div class="likert-item">
+        <div class="likert-q">${text}</div>
+        <div class="likert-scale">`;
+      LIKERT.forEach(opt=>{
+        const id = `${name}_${opt.v}`;
+        html += `<div class="likert-opt">
+          <input type="radio" id="${id}" name="${name}" value="${opt.v}" required>
+          <label for="${id}">${opt.l}</label>
+        </div>`;
+      });
+      html += `</div></div>`;
+    });
+    html += `</div>`;
+  });
+  html += `<div class="section-block">
+    <div class="eyebrow">Sección 2</div>
+    <h2>Fortalezas</h2>
+    <p class="desc">${voice==='primera' ? '¿Cuáles consideras que son tus principales fortalezas personales?' : '¿Cuáles consideras que son las principales fortalezas personales de la participante?'}</p>
+    <textarea name="strengths" required placeholder="Escribe aquí…"></textarea>
+  </div>`;
+  html += `<div class="section-block">
+    <div class="eyebrow">Sección 3</div>
+    <h2>Oportunidades de mejora</h2>
+    <p class="desc">${voice==='primera' ? '¿Qué aspectos consideras que podrías fortalecer?' : '¿Qué aspectos consideras que la participante podría fortalecer?'}</p>
+    <textarea name="improvements" required placeholder="Escribe aquí…"></textarea>
+  </div>`;
+  html += `<button type="submit" class="btn btn-primary btn-block" id="submit-btn-${containerId}">Enviar respuestas</button>`;
+  container.innerHTML = html;
+}
+
+function collectScores(formEl){
+  const scores = {};
+  COMPETENCIES.forEach(comp=>{
+    scores[comp.key] = ITEMS_SELF[comp.key].map((_,i)=>{
+      const el = formEl.querySelector(`input[name="${comp.key}_${i}"]:checked`);
+      return el ? Number(el.value) : null;
+    });
+  });
+  return scores;
+}
+
+async function submitSelf(e){
+  e.preventDefault();
+  const form = e.target;
+  const btn = document.getElementById('submit-btn-self-form-el');
+  btn.disabled = true;
+  const scores = collectScores(form);
+  const strengths = form.querySelector('[name=strengths]').value.trim();
+  const improvements = form.querySelector('[name=improvements]').value.trim();
+  const pid = selectedSelfParticipant.id;
+
+  btn.textContent = 'Guardando respuestas…';
+  const newResponse = {
+    id: uid('resp'),
+    participantId: pid,
+    participantName: selectedSelfParticipant.name,
+    type: 'self',
+    evaluatorName: selectedSelfParticipant.name,
+    relType: '', relDetail: '',
+    scores, strengths, improvements,
+    submittedAt: new Date().toISOString()
+  };
+  responses.push(newResponse);
+  try{
+    await apiPost({ action:'submitResponse', response:newResponse });
+  }catch(e){
+    showToast('No se pudo guardar. Verifica tu conexión e inténtalo de nuevo.');
+    btn.disabled = false; btn.textContent = 'Enviar respuestas';
+    return;
+  }
+
+  btn.textContent = 'Procesando informe…';
+  await processIndividualReport(pid);
+
+  showView('view-self-done');
+}
+
+/* ---------------- Peer flow ---------------- */
+async function validatePeer(){
+  const sel = document.getElementById('peer-name');
+  const pin = document.getElementById('peer-pin').value.trim();
+  const evalName = document.getElementById('peer-evaluator-name').value.trim();
+  const relType = document.getElementById('peer-rel-type').value;
+  const relDetail = document.getElementById('peer-rel-detail').value;
+  const errBox = document.getElementById('peer-auth-error');
+  errBox.innerHTML='';
+  const p = participants.find(x=>x.id===sel.value);
+  if(!p){ errBox.innerHTML='<div class="error-msg">Selecciona a la participante que vas a evaluar.</div>'; return; }
+  if(p.pin !== pin){ errBox.innerHTML='<div class="error-msg">El PIN ingresado no coincide. Verifica e intenta de nuevo.</div>'; return; }
+  if(!evalName){ errBox.innerHTML='<div class="error-msg">Ingresa tu nombre.</div>'; return; }
+  if(!relType || !relDetail){ errBox.innerHTML='<div class="error-msg">Indica tu relación con la participante.</div>'; return; }
+  selectedPeerParticipant = { participant:p, evalName, relType, relDetail };
+  document.getElementById('peer-form-name').textContent = p.name;
+  renderForm('peer-form-el', ITEMS_PEER, 'tercera');
+  showView('view-peer-form');
+}
+
+async function submitPeer(e){
+  e.preventDefault();
+  const form = e.target;
+  const btn = document.getElementById('submit-btn-peer-form-el');
+  btn.disabled = true;
+  const scores = collectScores(form);
+  const strengths = form.querySelector('[name=strengths]').value.trim();
+  const improvements = form.querySelector('[name=improvements]').value.trim();
+  const { participant, evalName, relType, relDetail } = selectedPeerParticipant;
+
+  btn.textContent = 'Guardando respuestas…';
+  const newResponse = {
+    id: uid('resp'),
+    participantId: participant.id,
+    participantName: participant.name,
+    type: 'peer',
+    evaluatorName: evalName,
+    relType, relDetail,
+    scores, strengths, improvements,
+    submittedAt: new Date().toISOString()
+  };
+  responses.push(newResponse);
+  try{
+    await apiPost({ action:'submitResponse', response:newResponse });
+  }catch(e){
+    showToast('No se pudo guardar. Verifica tu conexión e inténtalo de nuevo.');
+    btn.disabled = false; btn.textContent = 'Enviar respuestas';
+    return;
+  }
+
+  btn.textContent = 'Procesando informe…';
+  await processIndividualReport(participant.id);
+
+  showView('view-peer-done');
+}
+
+/* ---------------- Report processing ---------------- */
+async function processIndividualReport(participantId){
+  const p = participants.find(x=>x.id===participantId);
+  if(!p) return;
+  const own = responses.find(r=>r.participantId===participantId && r.type==='self');
+  const peers = responses.filter(r=>r.participantId===participantId && r.type==='peer');
+
+  const competencies = {};
+  COMPETENCIES.forEach(comp=>{
+    const selfAvg = own ? avg(own.scores[comp.key]) : null;
+    const peerAvgs = peers.map(r=>avg(r.scores[comp.key])).filter(v=>v!=null);
+    const peerAvg = peerAvgs.length ? peerAvgs.reduce((a,b)=>a+b,0)/peerAvgs.length : null;
+    competencies[comp.key] = { selfAvg, peerAvg, peerCount: peerAvgs.length };
+  });
+
+  const report = {
+    participantId, participantName: p.name,
+    competencies,
+    strengths: [
+      ...(own ? [{ source:'Autoevaluación', text: own.strengths }] : []),
+      ...peers.map(r=>({ source:`${r.evaluatorName} (${r.relDetail})`, text:r.strengths }))
+    ],
+    improvements: [
+      ...(own ? [{ source:'Autoevaluación', text: own.improvements }] : []),
+      ...peers.map(r=>({ source:`${r.evaluatorName} (${r.relDetail})`, text:r.improvements }))
+    ],
+    responseCount: (own?1:0) + peers.length,
+    processedAt: new Date().toISOString()
+  };
+  return report;
+}
+
+/* ---------------- Admin ---------------- */
+function goAdminLogin(){
+  document.getElementById('admin-pass').value='';
+  document.getElementById('admin-login-error').innerHTML='';
+  showView('view-admin-login');
+}
+async function checkAdminPass(){
+  const val = document.getElementById('admin-pass').value;
+  if(val !== ADMIN_PASSWORD){
+    document.getElementById('admin-login-error').innerHTML = '<div class="error-msg">Clave incorrecta.</div>';
+    return;
+  }
+  await loadData();
+  renderAdmin();
+  showView('view-admin');
+}
+
+function renderAdmin(){
+  const tbody = document.querySelector('#admin-participant-table tbody');
+  if(participants.length===0){
+    tbody.innerHTML = `<tr><td colspan="5" class="muted">Aún no hay participantes. Agrega la primera arriba.</td></tr>`;
+  }else{
+    tbody.innerHTML = participants.map(p=>{
+      const hasSelf = responses.some(r=>r.participantId===p.id && r.type==='self');
+      const peerCount = responses.filter(r=>r.participantId===p.id && r.type==='peer').length;
+      return `<tr>
+        <td>${escapeHtml(p.name)}</td>
+        <td><span class="pin-tag">${p.pin}</span></td>
+        <td><span class="badge ${hasSelf?'on':''}">${hasSelf?'Completa':'Pendiente'}</span></td>
+        <td><span class="badge ${peerCount>0?'on':''}">${peerCount} respuesta${peerCount===1?'':'s'}</span></td>
+        <td><button class="row-btn" onclick="removeParticipant('${p.id}')">Eliminar</button></td>
+      </tr>`;
+    }).join('');
+  }
+  const reportSel = document.getElementById('report-participant');
+  reportSel.innerHTML = participants.length
+    ? participants.map(p=>`<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('')
+    : '<option value="">Sin participantes</option>';
+}
+
+async function addParticipant(){
+  const input = document.getElementById('new-participant-name');
+  const name = input.value.trim();
+  if(!name){ showToast('Ingresa un nombre.'); return; }
+  const p = { id: uid('p'), name, pin: genPin() };
+  try{
+    await apiPost({ action:'addParticipant', participant:p });
+  }catch(e){
+    showToast('No se pudo guardar la participante. Intenta de nuevo.');
+    return;
+  }
+  participants.push(p);
+  input.value='';
+  renderAdmin();
+  showToast(`Agregada. PIN: ${p.pin}`);
+}
+async function removeParticipant(id){
+  if(!confirm('¿Eliminar esta participante? También se conservarán sus respuestas ya registradas, pero ya no aparecerá en las listas.')) return;
+  try{
+    await apiPost({ action:'deleteParticipant', id });
+  }catch(e){
+    showToast('No se pudo eliminar. Intenta de nuevo.');
+    return;
+  }
+  participants = participants.filter(p=>p.id!==id);
+  renderAdmin();
+}
+
+/* ---------------- Excel export ---------------- */
+async function exportExcel(){
+  await loadData();
+  const wb = XLSX.utils.book_new();
+
+  const partsSheet = participants.map(p=>({ Nombre:p.name, PIN:p.pin }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(partsSheet), "Participantes");
+
+  const rows = [];
+  responses.forEach(r=>{
+    const base = {
+      "Participante": r.participantName,
+      "Tipo": r.type==='self' ? 'Autoevaluación' : 'Evaluación de pares',
+      "Evaluador": r.evaluatorName,
+      "Entorno": r.relType || '',
+      "Relación": r.relDetail || '',
+      "Fecha": r.submittedAt
+    };
+    COMPETENCIES.forEach(comp=>{
+      ITEMS_SELF[comp.key].forEach((text,i)=>{
+        base[`${comp.label} - Ítem ${i+1}`] = r.scores[comp.key][i];
+      });
+      const vals = r.scores[comp.key].filter(v=>v!=null);
+      base[`${comp.label} - Promedio`] = vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2) : '';
+    });
+    base["Fortalezas"] = r.strengths;
+    base["Oportunidades de mejora"] = r.improvements;
+    rows.push(base);
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), "Respuestas");
+
+  XLSX.writeFile(wb, `evaluacion360_espae_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+/* ---------------- PDF report ---------------- */
+function avg(arr){ const v = arr.filter(x=>x!=null); return v.length ? v.reduce((a,b)=>a+b,0)/v.length : null; }
+
+async function generatePdf(){
+  const pid = document.getElementById('report-participant').value;
+  if(!pid){ showToast('Selecciona una participante.'); return; }
+
+  // Open the tab synchronously on the click, before any awaits, so popup blockers allow it.
+  const popup = window.open('', '_blank');
+
+  await loadData();
+  const p = participants.find(x=>x.id===pid);
+  if(!p){ showToast('Selecciona una participante.'); if(popup) popup.close(); return; }
+  const own = responses.find(r=>r.participantId===pid && r.type==='self');
+  const peers = responses.filter(r=>r.participantId===pid && r.type==='peer');
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'pt', format:'a4'});
+  const pageW = doc.internal.pageSize.getWidth();
+  const marginX = 48;
+  let y = 56;
+
+  const plum700 = [87,41,117], plum900=[47,44,53], grey=[112,105,120];
+
+  function ensureSpace(h){
+    if(y + h > 780){ doc.addPage(); y = 56; }
+  }
+  function heading(text, size=18){
+    ensureSpace(size+16);
+    doc.setFont('helvetica','bold'); doc.setFontSize(size); doc.setTextColor(...plum900);
+    doc.text(text, marginX, y); y += size*1.1;
+  }
+  function label(text){
+    ensureSpace(16);
+    doc.setFont('helvetica','bold'); doc.setFontSize(10.5); doc.setTextColor(...plum700);
+    doc.text(text.toUpperCase(), marginX, y); y += 16;
+  }
+  function paragraph(text, size=10.5){
+    doc.setFont('helvetica','normal'); doc.setFontSize(size); doc.setTextColor(...plum900);
+    const lines = doc.splitTextToSize(text, pageW - marginX*2);
+    lines.forEach(line=>{ ensureSpace(size+4); doc.text(line, marginX, y); y += size+4; });
+    y += 6;
+  }
+
+  // Header
+  doc.setFillColor(...plum700);
+  doc.rect(0,0,pageW,64,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFont('helvetica','bold'); doc.setFontSize(15);
+  doc.text('Evaluación 360 · Diplomado Mujeres Directivas', marginX, 30);
+  doc.setFont('helvetica','normal'); doc.setFontSize(10);
+  doc.text('ESPAE · Escuela de Negocios de la ESPOL', marginX, 46);
+  y = 96;
+
+  heading(p.name, 20);
+  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(...grey);
+  doc.text(`Informe generado el ${new Date().toLocaleDateString('es-EC',{year:'numeric',month:'long',day:'numeric'})}`, marginX, y);
+  y += 26;
+
+  // Scores table
+  label('Resultados por competencia (escala 1 a 5)');
+  const colW = [190, 90, 90, 90];
+  const headers = ['Competencia','Autoevaluación','Promedio pares','Diferencia'];
+  ensureSpace(24);
+  doc.setFillColor(...plum700);
+  doc.rect(marginX, y-12, colW.reduce((a,b)=>a+b,0), 20, 'F');
+  doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(9.5);
+  let x = marginX+8;
+  headers.forEach((h,i)=>{ doc.text(h, x, y+2); x += colW[i]; });
+  y += 20;
+
+  COMPETENCIES.forEach(comp=>{
+    const selfAvg = own ? avg(own.scores[comp.key]) : null;
+    const peerAvgs = peers.map(r=>avg(r.scores[comp.key])).filter(v=>v!=null);
+    const peerAvg = peerAvgs.length ? peerAvgs.reduce((a,b)=>a+b,0)/peerAvgs.length : null;
+    ensureSpace(22);
+    doc.setDrawColor(208,204,213); doc.line(marginX, y+4, marginX+colW.reduce((a,b)=>a+b,0), y+4);
+    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(...plum900);
+    x = marginX+8;
+    const vals = [
+      comp.label,
+      selfAvg!=null ? selfAvg.toFixed(2) : '—',
+      peerAvg!=null ? peerAvg.toFixed(2) : '—',
+      (selfAvg!=null && peerAvg!=null) ? (selfAvg-peerAvg>=0?'+':'')+(selfAvg-peerAvg).toFixed(2) : '—'
+    ];
+    vals.forEach((v,i)=>{ doc.text(String(v), x, y+14); x += colW[i]; });
+    y += 22;
+  });
+  y += 18;
+
+  paragraph(`Basado en su autoevaluación y en ${peers.length} evaluación${peers.length===1?'':'es'} de pares recibida${peers.length===1?'':'s'}.`, 9.5);
+  y += 4;
+
+  // Strengths
+  label('Fortalezas identificadas');
+  if(own) paragraph(`Autoevaluación — ${own.strengths}`);
+  peers.forEach(r=>{ paragraph(`${r.evaluatorName} (${r.relDetail}) — ${r.strengths}`); });
+  if(!own && peers.length===0) paragraph('Aún no hay respuestas registradas.');
+
+  // Improvements
+  label('Oportunidades de mejora identificadas');
+  if(own) paragraph(`Autoevaluación — ${own.improvements}`);
+  peers.forEach(r=>{ paragraph(`${r.evaluatorName} (${r.relDetail}) — ${r.improvements}`); });
+  if(!own && peers.length===0) paragraph('Aún no hay respuestas registradas.');
+
+  const filename = `informe_360_${p.name.replace(/\s+/g,'_')}.pdf`;
+  const blobUrl = doc.output('bloburl');
+
+  const fallback = document.getElementById('pdf-fallback-link');
+  fallback.href = blobUrl;
+  fallback.download = filename;
+  fallback.textContent = `⇩ Descargar informe de ${p.name}`;
+  fallback.style.display = 'inline-block';
+
+  if(popup && !popup.closed){
+    popup.location.href = blobUrl;
+    showToast('Informe PDF abierto en una pestaña nueva.');
+  }else{
+    showToast('Usa el botón "Abrir informe PDF" para descargarlo.');
+  }
+}
+
+/* ---------------- Init ---------------- */
+loadData();
+</script>
+</body>
+</html>
